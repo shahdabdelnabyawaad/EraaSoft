@@ -28,51 +28,76 @@
         }
 
         /* 1. COVER PAGE CONTAINER WITH BACKGROUND IMAGE */
-        .cover-container {
-            position: relative;
-            width: 100vw;
-            height: 100vh;
-            /* الصورة الثانية المختارة كخلفية للغلاف */
-            background: url('https://images.unsplash.com/photo-1576602976047-174e57a47881?q=80&w=1600&auto=format&fit=crop') center/cover no-repeat; 
-            display: flex; 
-            justify-content: center; 
-            align-items: center; 
-            opacity: 0; 
-            animation: fadeInCover 1s ease-in-out 2.5s forwards; 
-        } 
+       .cover-container {
+    position: relative;
+    width: 100%;
+    height: 100vh;
+
+    background-image: url('https://images.unsplash.com/photo-1576602976047-174e57a47881?q=80&w=1600&auto=format&fit=crop');
+    background-position: center;
+    background-size: cover;
+    background-repeat: no-repeat;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    opacity: 0;
+    animation: fadeInCover 1s ease-in-out 2.5s forwards;
+}
  
         /* Dark Overlay over background for contrast */ 
-        .cover-overlay { 
-            position: absolute; 
-            top: 0; left: 0; 
-            width: 100%; height: 100%; 
-            background: rgba(11, 19, 43, 0.75); 
-            backdrop-filter: blur(4px); 
-        } 
+        ..cover-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+
+    /* طبقة غامقة خفيفة فقط */
+    background: rgba(11, 19, 43, 0.35);
+}
  
         /* 2. CENTER TITLE */ 
-        .main-title-box { 
-            position: relative; 
-            z-index: 5; 
-            text-align: center; 
-            padding: 30px 50px; 
-            background: rgba(28, 37, 65, 0.65); 
-            border: 1px solid rgba(0, 168, 204, 0.3); 
-            border-radius: 24px; 
-            box-shadow: 0 20px 50px rgba(0,0,0,0.5); 
-            backdrop-filter: blur(10px); 
-        } 
+        .main-title-box {
+    position: relative;
+    z-index: 5;
+
+    text-align: center;
+
+    padding: 18px 28px;
+
+    width: fit-content;
+    max-width: 90%;
+
+    background: rgba(28, 37, 65, 0.65);
+
+    border: 1px solid rgba(0, 168, 204, 0.3);
+
+    border-radius: 18px;
+
+    box-shadow: 0 10px 30px rgba(0,0,0,0.35);
+
+    backdrop-filter: blur(6px);
+}
  
-        .main-title-box h1 { 
-            font-size: 3.5rem; 
-            font-weight: 900; 
-            background: linear-gradient(135deg, #FFFFFF 30%, var(--brand-cyan)); 
-            -webkit-background-clip: text; 
-            -webkit-text-fill-color: transparent; 
-            letter-spacing: 1.5px; 
-            margin-bottom: 10px; 
-            text-shadow: 0 10px 30px rgba(0,0,0,0.5); 
-        } 
+      .main-title-box h1 {
+    font-size: 2.4rem;
+    font-weight: 900;
+
+    background: linear-gradient(
+        135deg,
+        #FFFFFF 30%,
+        var(--brand-cyan)
+    );
+
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+
+    letter-spacing: 1px;
+
+    margin: 0;
+}
  
         .main-title-box p { 
             font-size: 1.2rem; 
@@ -116,17 +141,27 @@
         } 
  
         /* 4. ANIMATED ERASOFT INTRO OVERLAY */ 
-        #intro-overlay { 
-            position: fixed; 
-            top: 0; left: 0; 
-            width: 100vw; height: 100vh; 
-            background: #050a18; 
-            display: flex; 
-            justify-content: center; 
-            align-items: center; 
-            z-index: 9999; 
-            animation: fadeOutOverlay 0.6s ease-in-out 2.4s forwards; 
-        } 
+       #intro-overlay {
+    position: fixed;
+
+    top: 0;
+    left: 0;
+
+    width: 100vw;
+    height: 100vh;
+
+    background: #050a18;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    z-index: 9999;
+
+    animation: fadeOutBackground 0.8s ease-in-out 2.4s forwards;
+
+    pointer-events: none;
+}
  
         .erasoft-animated-logo { 
             position: absolute; 
@@ -156,12 +191,11 @@
             } 
         } 
  
-        @keyframes fadeOutOverlay { 
-            to { 
-                opacity: 0; 
-                visibility: hidden; 
-            } 
-        } 
+        @keyframes fadeOutBackground {
+    to {
+        background: transparent;
+    }
+}
  
         @keyframes fadeInCover { 
             to { 
@@ -210,7 +244,7 @@
         <!-- Center Main Title --> 
         <div class="main-title-box"> 
             <h1>Pharmacy Performance Dashboard</h1> 
-            <p>Advanced Analytics & Executive Performance Overview</p> 
+            
         </div> 
     </div> 
  
