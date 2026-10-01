@@ -159,6 +159,18 @@ def truthy(s):
     return s.astype(str).str.lower().isin(["true", "1", "yes", "y"])
 
 
+def graded(n, top, lo, hi):
+    """Colors for n bars sorted ascending: the last (largest) bar gets `top`, the rest fade from `lo` to `hi`."""
+    out = []
+    for i in range(n):
+        if i == n - 1:
+            out.append(top)
+        else:
+            k = i / max(n - 2, 1)
+            out.append("rgb" + str(tuple(int(p + (q - p) * k) for p, q in zip(lo, hi))))
+    return out
+
+
 LOGO_MODE = "pill"  # "white" = transparent white logos, "pill" = logos on white rounded boxes
 RAW = "https://raw.githubusercontent.com/shahdabdelnabyawaad/EraaSoft/main/"
 if st.query_params.get("page") != "overview":
@@ -496,10 +508,28 @@ else:
     rp["per_pharm"] = rp["rx"] / rp["ph"].where(rp["ph"] > 0)
     insight("Prescriptions have no pharmacist field, so the ratio is calculated per branch: prescriptions divided by pharmacists at that branch.")
     l, r_ = st.columns(2)
-    show(px.bar(rp.sort_values("per_pharm"), x="per_pharm", y="store_name", orientation="h", title="Prescriptions per pharmacist", color_discrete_sequence=[TEAL]), l)
-    docs = rx["doctor_name"].value_counts().head(10).rename_axis("doctor").reset_index(name="rx")
-    show(px.bar(docs.sort_values("rx"), x="rx", y="doctor", orientation="h", title="Top prescribing doctors", color_discrete_sequence=[NAVY]), r_)
+    rp_ok = rp.dropna(subset=["per_pharm"]).sort_values("per_pharm")
+    f = px.bar(rp_ok, x="per_pharm", y="store_name", orientation="h", title="Prescriptions per pharmacist")
+    f.update_traces(marker_color=graded(len(rp_ok), TEAL, (200, 232, 240), (90, 185, 205)),
+                    texttemplate="%{x:,.0f}", textposition="outside", cliponaxis=False,
+                    hovertemplate="%{y}<br>Prescriptions per pharmacist: %{x:,.0f}<extra></extra>")
+    f.update_xaxes(range=[0, rp_ok["per_pharm"].max() * 1.15])
+    show(f, l)
+    no_ph = rp[rp["per_pharm"].isna()]
+    if len(no_ph):
+        l.caption("No pharmacist on record (ratio not available): " +
+                  ", ".join(f"{r['store_name']} ({int(r['rx'])} prescriptions)" for _, r in no_ph.iterrows()))
+    docs = rx["doctor_name"].value_counts().head(10).rename_axis("doctor").reset_index(name="rx").sort_values("rx")
+    f = px.bar(docs, x="rx", y="doctor", orientation="h", title="Top prescribing doctors")
+    f.update_traces(marker_color=graded(len(docs), NAVY, (208, 213, 238), (98, 110, 192)),
+                    texttemplate="%{x:,.0f}", textposition="outside", cliponaxis=False,
+                    hovertemplate="%{y}<br>Prescriptions: %{x:,.0f}<extra></extra>")
+    f.update_xaxes(range=[0, docs["rx"].max() * 1.12])
+    show(f, r_)
     l, r_ = st.columns(2)
     show(px.pie(sales, names="payment_method", values="total_amount", hole=.55, title="Revenue by payment method", color_discrete_sequence=PAL), l)
     lt = sales.groupby("loyalty_tier")["total_amount"].sum().reset_index()
-    show(px.bar(lt, x="loyalty_tier", y="total_amount", title="Revenue by loyalty tier", color_discrete_sequence=[TEAL]), r_)
+    f = px.bar(lt, x="loyalty_tier", y="total_amount", title="Revenue by loyalty tier")
+    f.update_traces(marker_color=[NAVY if v == lt["total_amount"].max() else TEAL for v in lt["total_amount"]],
+                    hovertemplate="%{x}<br>Revenue: $%{y:,.0f}<extra></extra>")
+    show(f, r_)
