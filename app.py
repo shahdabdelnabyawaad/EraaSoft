@@ -106,22 +106,202 @@ st.markdown("<style>" + _css + "</style>", unsafe_allow_html=True)
 st.markdown("""
 <style>
 @media (max-width: 640px){
-  .block-container,[data-testid=stMainBlockContainer]{padding:.6rem .7rem 2rem!important}
-  .st-key-hdr{padding:12px 10px;border-radius:18px}
-  .st-key-hdr [data-testid=stHorizontalBlock]{flex-wrap:wrap!important;gap:.45rem!important;justify-content:center}
-  .st-key-hdr [data-testid=stColumn],.st-key-hdr [data-testid=column]{min-width:0!important;flex:0 0 auto!important;width:auto!important}
-  .st-key-hdr [data-testid=stColumn]:nth-child(-n+2),.st-key-hdr [data-testid=column]:nth-child(-n+2){
-      flex:1 1 100%!important;width:100%!important;text-align:center}
-  .st-key-hdr img{margin:0 auto}
-  .st-key-hdr button{width:42px!important;min-width:42px!important;height:42px!important;border-radius:12px!important}
-  .st-key-hdr button::after{width:24px;height:24px}
-  .ttl{font-size:18px}.sub{font-size:12px}
-  .st-key-flt{padding:8px 12px}
-  .kpi{height:auto;min-height:88px;padding:10px 12px 10px 16px;gap:10px}
-  .kpi .ic{flex:0 0 42px;height:42px;font-size:20px}
-  .kpi .v{font-size:19px}
-  .insight{font-size:13px;padding:12px 14px}
-  .sec{font-size:17px}
+  /* ===== Mobile layout ===== */
+  .block-container,[data-testid=stMainBlockContainer]{
+      padding:.55rem .65rem 1.5rem!important;
+      max-width:100%!important;
+      overflow-x:hidden!important;
+  }
+
+  /* Header: keep the title clean, then put navigation on its own row */
+  .st-key-hdr{
+      padding:10px 8px!important;
+      border-radius:16px!important;
+      overflow:visible!important;
+  }
+  .st-key-hdr [data-testid="stHorizontalBlock"]{
+      flex-wrap:wrap!important;
+      gap:.4rem!important;
+      row-gap:.55rem!important;
+      justify-content:center!important;
+  }
+  .st-key-hdr [data-testid="stColumn"],
+  .st-key-hdr [data-testid="column"]{
+      min-width:0!important;
+      flex:0 0 auto!important;
+      width:auto!important;
+  }
+  .st-key-hdr [data-testid="stColumn"]:nth-child(-n+2),
+  .st-key-hdr [data-testid="column"]:nth-child(-n+2){
+      flex:1 1 100%!important;
+      width:100%!important;
+      max-width:100%!important;
+      text-align:center!important;
+  }
+  .st-key-hdr img{
+      margin:0 auto!important;
+      max-width:120px!important;
+      height:auto!important;
+  }
+  .st-key-hdr button{
+      width:40px!important;
+      min-width:40px!important;
+      max-width:40px!important;
+      height:40px!important;
+      border-radius:11px!important;
+  }
+  .st-key-hdr button::after{width:22px!important;height:22px!important}
+  .ttl{
+      font-size:17px!important;
+      line-height:1.25!important;
+      white-space:normal!important;
+      overflow-wrap:anywhere!important;
+  }
+  .sub{font-size:11px!important}
+
+  /* Filters: one control per row so labels never collide */
+  .st-key-flt{
+      padding:8px 10px!important;
+      margin:10px 0 5px!important;
+  }
+  .st-key-flt [data-testid="stHorizontalBlock"]{
+      flex-wrap:wrap!important;
+  }
+  .st-key-flt [data-testid="stColumn"],
+  .st-key-flt [data-testid="column"]{
+      flex:1 1 100%!important;
+      width:100%!important;
+      min-width:100%!important;
+  }
+
+  /* All normal Streamlit column groups: 2 cards per row on phones */
+  [data-testid="stMainBlockContainer"] [data-testid="stHorizontalBlock"]{
+      flex-wrap:wrap!important;
+      gap:.65rem!important;
+      row-gap:.7rem!important;
+  }
+  [data-testid="stMainBlockContainer"] [data-testid="stHorizontalBlock"] > [data-testid="stColumn"],
+  [data-testid="stMainBlockContainer"] [data-testid="stHorizontalBlock"] > [data-testid="column"]{
+      flex:1 1 calc(50% - .4rem)!important;
+      width:calc(50% - .4rem)!important;
+      min-width:0!important;
+      max-width:calc(50% - .4rem)!important;
+  }
+
+  /* KPI cards */
+  .kpi{
+      width:100%!important;
+      min-height:92px!important;
+      height:auto!important;
+      padding:10px 10px 10px 13px!important;
+      gap:8px!important;
+      box-sizing:border-box!important;
+  }
+  .kpi .ic{
+      flex:0 0 36px!important;
+      width:36px!important;
+      height:36px!important;
+      font-size:18px!important;
+      border-radius:10px!important;
+  }
+  .kpi .tx{
+      min-width:0!important;
+      overflow:hidden!important;
+  }
+  .kpi .l{
+      font-size:10.5px!important;
+      line-height:1.2!important;
+      white-space:normal!important;
+  }
+  .kpi .v{
+      font-size:16px!important;
+      line-height:1.2!important;
+      white-space:normal!important;
+      overflow-wrap:anywhere!important;
+  }
+  .kpi .s{
+      font-size:9.5px!important;
+      line-height:1.25!important;
+      white-space:normal!important;
+      overflow-wrap:anywhere!important;
+  }
+
+  .insight{
+      font-size:12px!important;
+      line-height:1.45!important;
+      padding:10px 12px!important;
+      margin:9px 0 12px!important;
+  }
+  .sec{
+      font-size:16px!important;
+      line-height:1.35!important;
+      margin:14px 0 4px!important;
+  }
+
+  /* Plotly charts */
+  [data-testid="stPlotlyChart"]{
+      width:100%!important;
+      max-width:100%!important;
+      overflow:hidden!important;
+  }
+  [data-testid="stPlotlyChart"] > div{
+      max-width:100%!important;
+  }
+
+  /* Dataframes/tables: scroll horizontally instead of crushing text */
+  [data-testid="stDataFrame"]{
+      width:100%!important;
+      max-width:100%!important;
+      overflow-x:auto!important;
+  }
+
+  /* Tabs: allow labels to wrap instead of overlapping */
+  [data-baseweb="tab-list"]{
+      gap:4px!important;
+      overflow-x:auto!important;
+      scrollbar-width:none!important;
+  }
+  [data-baseweb="tab-list"]::-webkit-scrollbar{display:none!important}
+  [data-baseweb="tab"]{
+      white-space:normal!important;
+      text-align:center!important;
+      line-height:1.2!important;
+      min-height:42px!important;
+      padding:7px 9px!important;
+      font-size:11px!important;
+  }
+
+  /* Inputs and buttons */
+  [data-baseweb="select"]{
+      max-width:100%!important;
+  }
+  .stSelectbox label,.stMultiSelect label,.stDateInput label,.stSlider label{
+      font-size:12px!important;
+  }
+}
+
+@media (max-width: 380px){
+  /* Very narrow phones: one KPI/card per row for readability */
+  [data-testid="stMainBlockContainer"] [data-testid="stHorizontalBlock"] > [data-testid="stColumn"],
+  [data-testid="stMainBlockContainer"] [data-testid="stHorizontalBlock"] > [data-testid="column"]{
+      flex:1 1 100%!important;
+      width:100%!important;
+      max-width:100%!important;
+  }
+  .st-key-hdr button{
+      width:37px!important;
+      min-width:37px!important;
+      max-width:37px!important;
+      height:37px!important;
+  }
+  .st-key-hdr button::after{width:20px!important;height:20px!important}
+}
+
+@media (min-width: 641px) and (max-width: 1100px){
+  /* Tablets / small laptops: keep the desktop composition but prevent cramped cards */
+  .block-container,[data-testid=stMainBlockContainer]{padding-left:1rem!important;padding-right:1rem!important}
+  .kpi{padding-left:15px!important;padding-right:12px!important}
+  .kpi .v{font-size:20px}
 }
 @media (min-width: 1600px){
   .block-container,[data-testid=stMainBlockContainer]{max-width:1600px}
@@ -154,15 +334,35 @@ def show(fig, col=None, h=380):
         if ax.title.text in NAMES:
             ax.title.text = NAMES[ax.title.text]
     if IS_MOBILE:
-        h = min(h, 340)
-    fig.update_layout(template="plotly_white", height=h, margin=dict(l=6, r=6, t=55, b=10),
-                      paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)",
-                      font=dict(family="Poppins, Segoe UI, sans-serif", color="#44506f", size=11 if IS_MOBILE else 13),
-                      title_font=dict(size=13 if IS_MOBILE else 15, color=NAVY), legend_title_text="")
+        h = min(h, 320)
+        fig.update_layout(
+            margin=dict(l=8, r=8, t=48, b=42),
+            font=dict(family="Poppins, Segoe UI, sans-serif", color="#44506f", size=10),
+            title_font=dict(size=12, color=NAVY),
+            legend=dict(
+                orientation="h",
+                y=-0.18,
+                x=0.5,
+                xanchor="center",
+                yanchor="top",
+                font=dict(size=9)
+            )
+        )
+    else:
+        fig.update_layout(
+            margin=dict(l=6, r=6, t=55, b=10),
+            font=dict(family="Poppins, Segoe UI, sans-serif", color="#44506f", size=13),
+            title_font=dict(size=15, color=NAVY)
+        )
+    fig.update_layout(
+        template="plotly_white",
+        height=h,
+        paper_bgcolor="rgba(0,0,0,0)",
+        plot_bgcolor="rgba(0,0,0,0)",
+        legend_title_text=""
+    )
     fig.update_xaxes(automargin=True)
     fig.update_yaxes(automargin=True)
-    if IS_MOBILE:
-        fig.update_layout(legend=dict(orientation="h", y=-0.2, x=0.5, xanchor="center"))
     with (col or st).container(border=True):
         st.plotly_chart(fig, use_container_width=True, config=CFG)
 
@@ -195,7 +395,9 @@ def rev_bar(df, y, title, col=None):
         cb.update(orientation="h", y=-0.25, x=0.5, xanchor="center", len=.9, thickness=10)
     f.update_coloraxes(colorbar=cb)
     f.update_xaxes(title=None, tickprefix="$", tickformat="~s")
-    f.update_yaxes(title=None)
+    f.update_yaxes(title=None, automargin=True)
+    if IS_MOBILE:
+        f.update_layout(yaxis=dict(tickfont=dict(size=9)))
     show(f, col)
 
 
