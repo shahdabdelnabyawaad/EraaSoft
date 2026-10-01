@@ -76,13 +76,20 @@ _css = (".st-key-hdr [data-testid=stButton]{display:flex;justify-content:center}
         ".st-key-hdr button::after{content:'';position:absolute;inset:0;margin:auto;width:32px;height:32px;background:#fff;"
         "-webkit-mask-repeat:no-repeat;mask-repeat:no-repeat;-webkit-mask-position:center;mask-position:center;"
         "-webkit-mask-size:contain;mask-size:contain}"
-        ".st-key-hdr button[data-testid=stBaseButton-primary]::after{background:" + NAVY + "}")
+        ".st-key-hdr button[data-testid=stBaseButton-primary]::after{background:" + NAVY + "}"
+        ".st-key-hdr button::before{display:none;position:absolute;top:calc(100% + 12px);left:50%;transform:translateX(-50%);"
+        "background:#fff;color:" + NAVY + ";padding:7px 14px;border-radius:10px;font-size:13px;font-weight:600;"
+        "white-space:nowrap;box-shadow:0 8px 22px rgba(0,0,0,.25);z-index:99999;pointer-events:none}"
+        ".st-key-hdr button:hover::before{display:block}")
+_NAMES = {"home": "Home", "n_0": "Overview", "n_1": "Stores", "n_2": "Categories", "n_3": "Inventory",
+          "n_4": "People \\000026 Customers", "n_5": "Branch Explorer"}
 for _k, _inner in _P.items():
     _svg = ("<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' "
             "stroke-linecap='round' stroke-linejoin='round'>" + _inner + "</svg>")
     _key = "n_home" if _k == "home" else _k
     _u = 'url("data:image/svg+xml;utf8,' + quote(_svg) + '")'
     _css += f".st-key-{_key} button::after{{-webkit-mask-image:{_u};mask-image:{_u}}}"
+    _css += f".st-key-{_key} button::before{{content:'{_NAMES[_k]}'}}"
 st.markdown("<style>" + _css + "</style>", unsafe_allow_html=True)
 
 
@@ -211,9 +218,9 @@ with st.container(key="hdr"):
     cols[0].image("logo_white.png", width=150)
     cols[1].markdown(f"<div class='ttl'>Pharmacy Performance Dashboard</div><div class='sub'>{st.session_state.page}</div>",
                      unsafe_allow_html=True)
-    cols[2].button(" ", help="Back to cover", key="n_home", on_click=home, use_container_width=True)
+    cols[2].button(" ", key="n_home", on_click=home, use_container_width=True)
     for i, (name, icon) in enumerate(PAGES):
-        cols[3 + i].button(" ", help=name, key=f"n_{i}", on_click=go, args=(name,),
+        cols[3 + i].button(" ", key=f"n_{i}", on_click=go, args=(name,),
                            type="primary" if st.session_state.page == name else "secondary", use_container_width=True)
 page = st.session_state.page
 
