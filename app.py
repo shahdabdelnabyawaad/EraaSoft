@@ -126,7 +126,7 @@ def show(fig, col=None, h=380):
         st.plotly_chart(fig, use_container_width=True, config=CFG)
 
 
-DIV = [[0, "#E9715B"], [0.5, "#EEF1F6"], [1, TEAL]]
+DIV = [[0, "#E9715B"], [0.33, "#F6B85F"], [0.66, "#6CC4B8"], [1, "#117A8B"]]  # low margin coral, then amber, mint, deep teal
 
 
 def trend(m, title, col=None):
@@ -148,7 +148,7 @@ def trend(m, title, col=None):
 
 def rev_bar(df, y, title, col=None):
     f = px.bar(df.sort_values("rev"), x="rev", y=y, orientation="h", color="margin", title=title,
-               color_continuous_scale=DIV, color_continuous_midpoint=margin)
+               color_continuous_scale=DIV, range_color=(df["margin"].min(), df["margin"].max()))
     f.update_coloraxes(colorbar=dict(title="Margin", tickformat=".0%", thickness=12, len=.8))
     f.update_xaxes(title=None, tickprefix="$", tickformat="~s")
     f.update_yaxes(title=None)
@@ -314,7 +314,7 @@ if page == "Overview":
     l, r_ = st.columns(2)
     rev_bar(st_sum, "store_name", "Revenue by branch (color = margin)", l)
     rev_bar(cat_sum, "category_name", "Revenue by category (color = margin)", r_)
-    st.caption("Bar length = revenue. Color = margin (profit divided by revenue) compared with the overall margin: teal is above it, coral is below it, grey is close to it. Bars are sorted by revenue, so colors can appear anywhere in the list.")
+    st.caption("Bar length = revenue. Color = margin (profit divided by revenue) coral = lowest margin, amber and mint = in between, deep teal = highest margin. Bars are sorted by revenue, so colors can appear anywhere in the list.")
 
 elif page == "Stores":
     section("Which branches are really profitable once discounting is counted?")
@@ -356,7 +356,7 @@ elif page == "Categories":
     hm = sales.groupby(["category_name", "store_name"])[["profit", "total_amount"]].sum().reset_index()
     hm["margin"] = hm["profit"] / hm["total_amount"]
     show(px.density_heatmap(hm, x="store_name", y="category_name", z="margin", histfunc="avg", title="Margin by category and branch",
-                            color_continuous_scale=DIV, color_continuous_midpoint=margin), h=440)
+                            color_continuous_scale=DIV), h=440)
     top = sales.groupby("product_name")["profit"].sum().nlargest(10).reset_index()
     show(px.bar(top.sort_values("profit"), x="profit", y="product_name", orientation="h", title="Top 10 products by profit", color_discrete_sequence=[NAVY]))
 
