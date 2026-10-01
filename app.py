@@ -9,10 +9,18 @@ os.chdir(os.path.dirname(os.path.abspath(__file__)))
 NAVY, TEAL, AMBER, RED, GREEN = "#1F2A6B", "#1B8AA6", "#F2A93B", "#E5484D", "#2FB67C"
 PAL = [TEAL, NAVY, "#3BC1D6", AMBER, RED, "#6C7AE0", GREEN]
 CFG = {"displayModeBar": False}
-PAGES = [("Overview", ":material/dashboard:"), ("Stores", ":material/storefront:"),
-         ("Categories", ":material/category:"), ("Inventory", ":material/inventory_2:"),
-         ("People & Customers", ":material/groups:"), ("Branch Explorer", ":material/travel_explore:")]
+PAGES = [("Overview", "📊"), ("Stores", "🏬"),
+         ("Categories", "🧴"), ("Inventory", "📦"),
+         ("People & Customers", "👥"), ("Branch Explorer", "🔎")]
 
+DESC = {
+    "Overview": "All 8 KPIs, monthly trend, branches and categories at a glance.",
+    "Stores": "Which branches are really profitable once discounting is counted? Includes the discount simulator.",
+    "Categories": "Which categories drive revenue and margin, and which just drive discounting?",
+    "Inventory": "How much inventory is at risk of expiring unsold, and where?",
+    "People & Customers": "Pharmacist workload, prescriptions, payment channels and loyalty segments.",
+    "Branch Explorer": "Pick one branch and see its manager, KPIs and trends.",
+}
 st.set_page_config(page_title="Pharmacy Performance Dashboard", page_icon="💊", layout="wide",
                    initial_sidebar_state="collapsed")
 st.markdown(f"""
@@ -77,9 +85,9 @@ def truthy(s):
     return s.astype(str).str.lower().isin(["true", "1", "yes", "y"])
 
 
+LOGO_MODE = "white"  # "white" = transparent white logos, "pill" = logos on white rounded boxes
 RAW = "https://raw.githubusercontent.com/shahdabdelnabyawaad/EraaSoft/main/"
 if st.query_params.get("page") != "overview":
-    mer = base64.b64encode(open("logo_white.png", "rb").read()).decode()
     html = """
 <style>
 body{overflow:hidden}
@@ -111,12 +119,15 @@ box-shadow:0 7px 20px rgba(0,0,0,.3);opacity:0;animation:fi .8s ease-in-out 2.8s
 </style>
 <div class="cv"><div class="ov"></div>
 <div class="era"><img src="__RAW__Logo%20EraaSoft.webp"></div>
-<div class="mid"><img class="m" src="data:image/png;base64,__MER__">
+<div class="mid">
 <div class="tb">Pharmacy Performance Dashboard</div>
 <a class="go" href="?page=overview" target="_self">Open dashboard</a></div>
 <div class="lg ic"><img src="__RAW__Logo%20icareer.webp"></div>
 <div class="lg dg"><img src="__RAW__Logo%20Digitera.png"></div></div>"""
-    st.markdown(html.replace("__RAW__", RAW).replace("__MER__", mer), unsafe_allow_html=True)
+    if LOGO_MODE == "white":
+        html = html.replace("</style>", ".era,.lg{background:none!important;box-shadow:none!important;padding:0!important}"
+                            ".era img,.lg img{filter:brightness(0) invert(1) drop-shadow(0 0 12px rgba(59,193,214,.7))}</style>", 1)
+    st.markdown(html.replace("__RAW__", RAW), unsafe_allow_html=True)
     st.stop()
 
 @st.cache_data
@@ -159,13 +170,13 @@ def home():
 sales, stock, rx, emp, store = load()
 
 with st.container(key="hdr"):
-    cols = st.columns([1.5, 3.6] + [0.45] * 7, vertical_alignment="center")
+    cols = st.columns([1.5, 3.4] + [0.55] * 7, vertical_alignment="center")
     cols[0].image("logo_white.png", width=150)
     cols[1].markdown(f"<div class='ttl'>Pharmacy Performance Dashboard</div><div class='sub'>{st.session_state.page}</div>",
                      unsafe_allow_html=True)
-    cols[2].button(" ", icon=":material/home:", help="Back to cover", key="n_home", on_click=home, use_container_width=True)
+    cols[2].button("🏠", help="Back to cover", key="n_home", on_click=home, use_container_width=True)
     for i, (name, icon) in enumerate(PAGES):
-        cols[3 + i].button(" ", icon=icon, help=name, key=f"n_{i}", on_click=go, args=(name,),
+        cols[3 + i].button(icon, help=f"**{name}**\n\n{DESC[name]}", key=f"n_{i}", on_click=go, args=(name,),
                            type="primary" if st.session_state.page == name else "secondary", use_container_width=True)
 page = st.session_state.page
 
