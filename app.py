@@ -64,21 +64,21 @@ _P = {
     "home": "<path d='M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z'/>",
     "n_0": "<rect x='3' y='3' width='7' height='9' rx='1.5'/><rect x='14' y='3' width='7' height='5' rx='1.5'/><rect x='14' y='12' width='7' height='9' rx='1.5'/><rect x='3' y='16' width='7' height='5' rx='1.5'/>",
     "n_1": "<path d='M3 9l1.5-5h15L21 9'/><path d='M3 9a3 3 0 0 0 6 0 3 3 0 0 0 6 0 3 3 0 0 0 6 0'/><path d='M5 12v8h14v-8'/><path d='M10 20v-5h4v5'/>",
-    "n_2": "<rect x='3' y='3' width='7' height='7' rx='1.5'/><rect x='14' y='3' width='7' height='7' rx='1.5'/><rect x='3' y='14' width='7' height='7' rx='1.5'/><circle cx='17.5' cy='17.5' r='3.5'/>",
+    "n_2": "<path d='M21 12A9 9 0 1 1 12 3v9z'/><path d='M15.5 3.5A9 9 0 0 1 20.5 8.5H15.5z'/>",
     "n_3": "<path d='M21 8 12 3 3 8v8l9 5 9-5z'/><path d='M3 8l9 5 9-5'/><path d='M12 13v8'/>",
     "n_4": "<circle cx='9' cy='8' r='3.5'/><path d='M2.5 20c0-3.6 2.9-6 6.5-6s6.5 2.4 6.5 6'/><circle cx='17' cy='9' r='2.7'/><path d='M17 14c3 0 4.5 1.9 4.5 5'/>",
     "n_5": "<path d='M12 21s-7-6.2-7-11a7 7 0 0 1 14 0c0 4.8-7 11-7 11z'/><circle cx='12' cy='10' r='2.5'/>",
 }
 _css = (".st-key-hdr [data-testid=stButton]{display:flex;justify-content:center}"
         ".st-key-hdr button{width:54px!important;min-width:54px!important;height:54px!important;border-radius:16px!important;"
-        "padding:0!important;display:flex;align-items:center;justify-content:center;font-size:0!important}"
+        "padding:0!important;position:relative;font-size:0!important}"
         ".st-key-hdr button p{display:none}"
-        ".st-key-hdr button::after{content:'';display:block;width:28px;height:28px;background:#fff;"
+        ".st-key-hdr button::after{content:'';position:absolute;inset:0;margin:auto;width:32px;height:32px;background:#fff;"
         "-webkit-mask-repeat:no-repeat;mask-repeat:no-repeat;-webkit-mask-position:center;mask-position:center;"
         "-webkit-mask-size:contain;mask-size:contain}"
         ".st-key-hdr button[data-testid=stBaseButton-primary]::after{background:" + NAVY + "}")
 for _k, _inner in _P.items():
-    _svg = ("<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.8' "
+    _svg = ("<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' "
             "stroke-linecap='round' stroke-linejoin='round'>" + _inner + "</svg>")
     _key = "n_home" if _k == "home" else _k
     _u = 'url("data:image/svg+xml;utf8,' + quote(_svg) + '")'
