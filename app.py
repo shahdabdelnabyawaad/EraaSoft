@@ -499,7 +499,12 @@ elif page == "Branch Explorer":
     l, r_ = st.columns(2)
     trend(mm_, "Monthly revenue and profit", l)
     cc = s.groupby("category_name")["total_amount"].sum().reset_index().sort_values("total_amount")
-    show(px.bar(cc, x="total_amount", y="category_name", orientation="h", title="Revenue by category", color_discrete_sequence=[TEAL]), r_)
+    f = px.bar(cc, x="total_amount", y="category_name", orientation="h", title="Revenue by category")
+    f.update_traces(marker_color=graded(len(cc), TEAL, (200, 232, 240), (90, 185, 205)),
+                    texttemplate="$%{x:,.0f}", textposition="outside", cliponaxis=False,
+                    hovertemplate="%{y}<br>Revenue: $%{x:,.0f}<extra></extra>")
+    f.update_xaxes(tickprefix="$", tickformat="~s", range=[0, cc["total_amount"].max() * 1.2])
+    show(f, r_)
 
 else:
     section("Is pharmacist staffing matched to prescription volume? Which segments and channels matter?")
