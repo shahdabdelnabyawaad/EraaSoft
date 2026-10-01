@@ -385,7 +385,22 @@ elif page == "Categories":
     show(px.density_heatmap(hm, x="store_name", y="category_name", z="margin", histfunc="avg", title="Margin by category and branch",
                             color_continuous_scale=DIV), h=440)
     top = sales.groupby("product_name")["profit"].sum().nlargest(10).reset_index()
-    show(px.bar(top.sort_values("profit"), x="profit", y="product_name", orientation="h", title="Top 10 products by profit", color_discrete_sequence=[NAVY]))
+    top = top.sort_values("profit")
+    n = len(top)
+    cols = []
+    for i in range(n):
+        if i == n - 1:
+            cols.append(NAVY)  # the best product stands out in deep blue
+        else:
+            k = i / max(n - 2, 1)  # 0 = weakest of the ten, 1 = just below the best
+            lo, hi = (200, 232, 240), (27, 138, 166)
+            cols.append("rgb" + str(tuple(int(p + (q - p) * k) for p, q in zip(lo, hi))))
+    f = px.bar(top, x="profit", y="product_name", orientation="h", title="Top 10 products by profit")
+    f.update_traces(marker_color=cols, texttemplate="$%{x:,.0f}", textposition="outside", cliponaxis=False,
+                    hovertemplate="%{y}<br>Profit: $%{x:,.0f}<extra></extra>")
+    f.update_xaxes(tickprefix="$", title=None, range=[0, top["profit"].max() * 1.15])
+    f.update_yaxes(title=None)
+    show(f)
 
 elif page == "Inventory":
     section("How much inventory is at risk of expiring unsold, and where?")
