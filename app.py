@@ -58,6 +58,34 @@ box-shadow:0 6px 18px rgba(31,42,107,.07)}}
 </style>""", unsafe_allow_html=True)
 
 
+from urllib.parse import quote
+
+_P = {
+    "home": "<path d='M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z'/>",
+    "n_0": "<rect x='3' y='3' width='7' height='9' rx='1.5'/><rect x='14' y='3' width='7' height='5' rx='1.5'/><rect x='14' y='12' width='7' height='9' rx='1.5'/><rect x='3' y='16' width='7' height='5' rx='1.5'/>",
+    "n_1": "<path d='M3 9l1.5-5h15L21 9'/><path d='M3 9a3 3 0 0 0 6 0 3 3 0 0 0 6 0 3 3 0 0 0 6 0'/><path d='M5 12v8h14v-8'/><path d='M10 20v-5h4v5'/>",
+    "n_2": "<rect x='3' y='3' width='7' height='7' rx='1.5'/><rect x='14' y='3' width='7' height='7' rx='1.5'/><rect x='3' y='14' width='7' height='7' rx='1.5'/><circle cx='17.5' cy='17.5' r='3.5'/>",
+    "n_3": "<path d='M21 8 12 3 3 8v8l9 5 9-5z'/><path d='M3 8l9 5 9-5'/><path d='M12 13v8'/>",
+    "n_4": "<circle cx='9' cy='8' r='3.5'/><path d='M2.5 20c0-3.6 2.9-6 6.5-6s6.5 2.4 6.5 6'/><circle cx='17' cy='9' r='2.7'/><path d='M17 14c3 0 4.5 1.9 4.5 5'/>",
+    "n_5": "<path d='M12 21s-7-6.2-7-11a7 7 0 0 1 14 0c0 4.8-7 11-7 11z'/><circle cx='12' cy='10' r='2.5'/>",
+}
+_css = (".st-key-hdr [data-testid=stButton]{display:flex;justify-content:center}"
+        ".st-key-hdr button{width:54px!important;min-width:54px!important;height:54px!important;border-radius:16px!important;"
+        "padding:0!important;display:flex;align-items:center;justify-content:center;font-size:0!important}"
+        ".st-key-hdr button p{display:none}"
+        ".st-key-hdr button::after{content:'';display:block;width:28px;height:28px;background:#fff;"
+        "-webkit-mask-repeat:no-repeat;mask-repeat:no-repeat;-webkit-mask-position:center;mask-position:center;"
+        "-webkit-mask-size:contain;mask-size:contain}"
+        ".st-key-hdr button[data-testid=stBaseButton-primary]::after{background:" + NAVY + "}")
+for _k, _inner in _P.items():
+    _svg = ("<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.8' "
+            "stroke-linecap='round' stroke-linejoin='round'>" + _inner + "</svg>")
+    _key = "n_home" if _k == "home" else _k
+    _u = 'url("data:image/svg+xml;utf8,' + quote(_svg) + '")'
+    _css += f".st-key-{_key} button::after{{-webkit-mask-image:{_u};mask-image:{_u}}}"
+st.markdown("<style>" + _css + "</style>", unsafe_allow_html=True)
+
+
 def kpi(col, icon, label, value, sub="", color=TEAL):
     col.markdown(f"<div class='kpi' style='--c:{color}'><div class='ic' style='background:{color}22'>{icon}</div>"
                  f"<div class='tx'><div class='l'>{label}</div><div class='v'>{value}</div><div class='s'>{sub}&nbsp;</div></div></div>",
@@ -85,7 +113,7 @@ def truthy(s):
     return s.astype(str).str.lower().isin(["true", "1", "yes", "y"])
 
 
-LOGO_MODE = "white"  # "white" = transparent white logos, "pill" = logos on white rounded boxes
+LOGO_MODE = "pill"  # "white" = transparent white logos, "pill" = logos on white rounded boxes
 RAW = "https://raw.githubusercontent.com/shahdabdelnabyawaad/EraaSoft/main/"
 if st.query_params.get("page") != "overview":
     html = """
@@ -170,13 +198,13 @@ def home():
 sales, stock, rx, emp, store = load()
 
 with st.container(key="hdr"):
-    cols = st.columns([1.5, 3.4] + [0.55] * 7, vertical_alignment="center")
+    cols = st.columns([1.5, 3.0] + [0.6] * 7, vertical_alignment="center")
     cols[0].image("logo_white.png", width=150)
     cols[1].markdown(f"<div class='ttl'>Pharmacy Performance Dashboard</div><div class='sub'>{st.session_state.page}</div>",
                      unsafe_allow_html=True)
-    cols[2].button("🏠", help="Back to cover", key="n_home", on_click=home, use_container_width=True)
+    cols[2].button(" ", help="Back to cover", key="n_home", on_click=home, use_container_width=True)
     for i, (name, icon) in enumerate(PAGES):
-        cols[3 + i].button(icon, help=f"**{name}**\n\n{DESC[name]}", key=f"n_{i}", on_click=go, args=(name,),
+        cols[3 + i].button(" ", help=name, key=f"n_{i}", on_click=go, args=(name,),
                            type="primary" if st.session_state.page == name else "secondary", use_container_width=True)
 page = st.session_state.page
 
