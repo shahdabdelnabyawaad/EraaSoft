@@ -242,7 +242,7 @@ if "page" not in st.session_state:
     st.session_state.page = "Overview"
 
 
-def go(name):
+def set_page(name):
     st.session_state.page = name
 
 
@@ -259,7 +259,7 @@ with st.container(key="hdr"):
                      unsafe_allow_html=True)
     cols[2].button(" ", key="n_home", on_click=home, use_container_width=True)
     for i, (name, icon) in enumerate(PAGES):
-        cols[3 + i].button(" ", key=f"n_{i}", on_click=go, args=(name,),
+        cols[3 + i].button(" ", key=f"n_{i}", on_click=set_page, args=(name,),
                            type="primary" if st.session_state.page == name else "secondary", use_container_width=True)
 page = st.session_state.page
 
