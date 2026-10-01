@@ -226,14 +226,25 @@ def load():
     stock = stock.merge(store[["store_id", "store_name"]], on="store_id").merge(prod[pcols], on="product_id")
     stock["at_risk"] = truthy(stock["expiry_risk_flag"])
     stock["below"] = truthy(stock["below_reorder_flag"])
+
+    # Days left is computed from expiry_date (the CSV column days_to_expiry_flagged is 0 for every row).
+    # Reference date = last sales date in the data, so it stays consistent with the rest of the dashboard.
+    as_of = sales["sale_date"].max().normalize()
+    stock["expiry_date"] = pd.to_datetime(stock["expiry_date"], errors="coerce")
+    stock["days_left"] = (stock["expiry_date"] - as_of).dt.days
+    stock["expired"] = stock["at_risk"] & (stock["days_left"] < 0)
+    stock["soon"] = stock["at_risk"] & (stock["days_left"] >= 0)
     stock["risk_value"] = stock["quantity"] * stock["cost_price"] * stock["at_risk"]
+    stock["expired_value"] = stock["quantity"] * stock["cost_price"] * stock["expired"]
+    stock["soon_value"] = stock["quantity"] * stock["cost_price"] * stock["soon"]
+
     rx = rx.merge(store[["store_id", "store_name"]], on="store_id")
     emp = emp.merge(store[["store_id", "store_name"]], on="store_id")
     emp["is_ph"] = truthy(emp["is_pharmacist"])
     cust["loyalty_tier"] = cust["loyalty_tier"].fillna("No Tier")
     sales = sales.merge(cust[["customer_id", "loyalty_tier"]], on="customer_id", how="left")
     sales["loyalty_tier"] = sales["loyalty_tier"].fillna("No Tier")
-    return sales, stock, rx, emp, store
+    return sales, stock, rx, emp, store, as_of
 
 
 
@@ -250,7 +261,7 @@ def home():
     st.query_params.clear()
 
 
-sales, stock, rx, emp, store = load()
+sales, stock, rx, emp, store, AS_OF = load()
 
 with st.container(key="hdr"):
     cols = st.columns([1.5, 3.0] + [0.6] * 7, vertical_alignment="center")
@@ -292,6 +303,8 @@ cat_sum = sales.groupby("category_name").agg(rev=("total_amount", "sum"), prof=(
                                               disc=("discount_pct", "mean")).reset_index()
 cat_sum["margin"] = cat_sum["prof"] / cat_sum["rev"]
 risk = stock["risk_value"].sum()
+risk_expired = stock["expired_value"].sum()
+risk_soon = stock["soon_value"].sum()
 PCT = dict(tickformat=".0%")
 
 if page == "Overview":
@@ -299,7 +312,8 @@ if page == "Overview":
     kpi(c[0], "💰", "Total Revenue", f"${rev/1e6:.2f}M", "Selected branches and dates")
     kpi(c[1], "📈", "Total Profit", f"${prof/1e6:.2f}M", f"Overall margin {margin:.1%}", NAVY)
     kpi(c[2], "🏷️", "Average Discount", f"{sales['discount_pct'].mean():.1f}%", f"{(sales['profit'] < 0).mean():.1%} of sales lose money", AMBER)
-    kpi(c[3], "⏳", "Expiring Inventory at Risk", f"${risk:,.0f}", "Flagged batches at cost", RED)
+    kpi(c[3], "⏳", "Flagged Expiry Risk", f"${risk:,.0f}",
+        f"${risk_expired/1e3:,.0f}K expired, ${risk_soon/1e3:,.0f}K expiring soon", RED)
     st.write("")
     c = st.columns(4)
     ts, tc = st_sum.sort_values("rev").iloc[-1], cat_sum.sort_values("rev").iloc[-1]
@@ -404,10 +418,13 @@ elif page == "Categories":
 
 elif page == "Inventory":
     section("How much inventory is at risk of expiring unsold, and where?")
-    c = st.columns(3)
-    kpi(c[0], "⏳", "Expiring Inventory Value", f"${risk:,.0f}", "Flagged batches, qty x cost", RED)
-    kpi(c[1], "📦", "Flagged Batches", f"{int(stock['at_risk'].sum()):,}", "Expiry risk flag", AMBER)
-    kpi(c[2], "🔔", "Items Below Reorder Level", f"{int(stock['below'].sum()):,}", "Need restocking", NAVY)
+    c = st.columns(4)
+    kpi(c[0], "🗑️", "Already Expired", f"${risk_expired:,.0f}", f"{int(stock['expired'].sum()):,} batches, at cost", RED)
+    kpi(c[1], "⏳", "Expiring Soon", f"${risk_soon:,.0f}", f"{int(stock['soon'].sum()):,} batches, still sellable", AMBER)
+    kpi(c[2], "📦", "Total Flagged Batches", f"{int(stock['at_risk'].sum()):,}", "Expiry risk flag", NAVY)
+    kpi(c[3], "🔔", "Items Below Reorder Level", f"{int(stock['below'].sum()):,}", "Need restocking", GREEN)
+    st.caption(f"Days left are counted from {AS_OF:%Y-%m-%d} (last sales date in the data). "
+               "Negative days = the batch has already expired.")
     by_s = stock.groupby("store_name")["risk_value"].sum().reset_index().sort_values("risk_value")
     if by_s["risk_value"].sum() > 0:
         insight(f"{by_s.iloc[-1]['store_name']} carries the most expiry risk: ${by_s.iloc[-1]['risk_value']:,.0f}.")
@@ -430,11 +447,31 @@ elif page == "Inventory":
     by_c = stock.groupby("category_name")["risk_value"].sum().reset_index()
     by_c = by_c[by_c["risk_value"] > 0]
     show(px.treemap(by_c, path=["category_name"], values="risk_value", title="Expiry risk by category", color_discrete_sequence=PAL), r_)
+
     section("Batches closest to expiry")
-    with st.container(border=True):
-        near = stock[stock["at_risk"]].sort_values("days_to_expiry_flagged").head(15)
-        st.dataframe(near[["store_name", "product_name", "batch_number", "quantity", "expiry_date", "days_to_expiry_flagged"]],
+
+    def batch_table(df):
+        t = df.rename(columns={"store_name": "Branch", "product_name": "Product", "batch_number": "Batch",
+                               "quantity": "Qty", "expiry_date": "Expiry date", "days_left": "Days left"}).copy()
+        t["Expiry date"] = t["Expiry date"].dt.date
+        t["Status"] = t["Days left"].apply(lambda d: "Expired" if d < 0 else ("Expires within 30 days" if d <= 30 else "Expiring soon"))
+        st.dataframe(t[["Branch", "Product", "Batch", "Qty", "Expiry date", "Days left", "Status"]],
                      use_container_width=True, hide_index=True)
+
+    with st.container(border=True):
+        tab1, tab2 = st.tabs(["Expiring soon (not yet expired)", "Already expired (most recent first)"])
+        with tab1:
+            soon_df = stock[stock["soon"]].sort_values("days_left").head(15)
+            if soon_df.empty:
+                st.info("No flagged batches are still within their shelf life.")
+            else:
+                batch_table(soon_df)
+        with tab2:
+            exp_df = stock[stock["expired"]].sort_values("days_left", ascending=False).head(15)
+            if exp_df.empty:
+                st.info("No flagged batches have expired.")
+            else:
+                batch_table(exp_df)
 
 elif page == "Branch Explorer":
     names = sorted(sales["store_name"].unique())
