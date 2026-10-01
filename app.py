@@ -412,7 +412,21 @@ elif page == "Inventory":
     if by_s["risk_value"].sum() > 0:
         insight(f"{by_s.iloc[-1]['store_name']} carries the most expiry risk: ${by_s.iloc[-1]['risk_value']:,.0f}.")
     l, r_ = st.columns(2)
-    show(px.bar(by_s, x="risk_value", y="store_name", orientation="h", title="Expiry risk by branch", color_discrete_sequence=[RED]), l)
+    n = len(by_s)
+    cols = []
+    for i in range(n):
+        if i == n - 1:
+            cols.append(RED)  # highest risk stands out in solid red
+        else:
+            k = i / max(n - 2, 1)  # 0 = lowest risk, 1 = just below the highest
+            lo, hi = (252, 226, 220), (240, 130, 122)
+            cols.append("rgb" + str(tuple(int(p + (q - p) * k) for p, q in zip(lo, hi))))
+    f = px.bar(by_s, x="risk_value", y="store_name", orientation="h", title="Expiry risk by branch")
+    f.update_traces(marker_color=cols, texttemplate="$%{x:.2s}", textposition="outside", cliponaxis=False,
+                    hovertemplate="%{y}<br>At risk: $%{x:,.0f}<extra></extra>")
+    f.update_xaxes(tickprefix="$", tickformat="~s", title=None, range=[0, by_s["risk_value"].max() * 1.15])
+    f.update_yaxes(title=None)
+    show(f, l)
     by_c = stock.groupby("category_name")["risk_value"].sum().reset_index()
     by_c = by_c[by_c["risk_value"] > 0]
     show(px.treemap(by_c, path=["category_name"], values="risk_value", title="Expiry risk by category", color_discrete_sequence=PAL), r_)
