@@ -134,11 +134,20 @@ gap:clamp(14px,3vh,26px);padding:12vh 0 6vh;opacity:0;animation:fi .9s ease-in-o
 .mid img.m{height:clamp(80px,16vh,150px);max-width:70vw;object-fit:contain;filter:drop-shadow(0 0 28px rgba(59,193,214,.5))}
 .tb{padding:16px 30px;background:rgba(11,19,43,.7);border:1px solid rgba(0,168,204,.45);border-radius:16px;
 box-shadow:0 8px 25px rgba(0,0,0,.3);color:#fff;font-size:clamp(20px,3.2vw,38px);font-weight:800;letter-spacing:.8px;text-align:center;margin:0 16px}
-.go{display:inline-block;padding:clamp(10px,1.8vh,14px) clamp(24px,3vw,38px);border-radius:999px;background:#3BC1D6;color:#0b1033!important;
-font-weight:700;font-size:18px;text-decoration:none!important;box-shadow:0 0 0 0 rgba(59,193,214,.6);
-animation:pulse 2s infinite;transition:transform .2s}
-.go:hover{transform:scale(1.08)}
-@keyframes pulse{70%{box-shadow:0 0 0 18px rgba(59,193,214,0)}100%{box-shadow:0 0 0 0 rgba(59,193,214,0)}}
+.go{position:relative;display:inline-flex;align-items:center;gap:16px;overflow:hidden;
+padding:clamp(10px,1.8vh,15px) clamp(14px,1.6vw,18px) clamp(10px,1.8vh,15px) clamp(26px,3vw,40px);border-radius:999px;
+color:#fff!important;font-weight:600;font-size:clamp(15px,1.6vw,19px);letter-spacing:.6px;text-decoration:none!important;
+background:linear-gradient(135deg,rgba(59,193,214,.96),rgba(27,138,166,.96) 55%,rgba(31,42,107,.96));
+border:1px solid rgba(255,255,255,.55);box-shadow:0 10px 30px rgba(0,168,204,.45),inset 0 1px 0 rgba(255,255,255,.5);
+transition:transform .25s,box-shadow .25s}
+.go:before{content:'';position:absolute;top:0;left:-60%;width:40%;height:100%;transform:skewX(-20deg);
+background:linear-gradient(100deg,transparent,rgba(255,255,255,.55),transparent);animation:sh 3.4s ease-in-out 3.4s infinite}
+@keyframes sh{0%{left:-60%}60%,100%{left:140%}}
+.go .ar{display:inline-flex;align-items:center;justify-content:center;width:36px;height:36px;border-radius:50%;
+background:#fff;transition:transform .25s}
+.go .ar svg{width:18px;height:18px;stroke:#1F2A6B}
+.go:hover{transform:translateY(-3px) scale(1.04);box-shadow:0 16px 40px rgba(59,193,214,.65),inset 0 1px 0 rgba(255,255,255,.6)}
+.go:hover .ar{transform:translateX(5px)}
 .lg{position:absolute;z-index:4;background:rgba(255,255,255,.96);padding:9px 16px;border-radius:13px;
 box-shadow:0 7px 20px rgba(0,0,0,.3);opacity:0;animation:fi .8s ease-in-out 2.8s forwards}
 .lg img{height:clamp(26px,5vh,42px);display:block}
@@ -149,7 +158,7 @@ box-shadow:0 7px 20px rgba(0,0,0,.3);opacity:0;animation:fi .8s ease-in-out 2.8s
 <div class="era"><img src="__RAW__Logo%20EraaSoft.webp"></div>
 <div class="mid">
 <div class="tb">Pharmacy Performance Dashboard</div>
-<a class="go" href="?page=overview" target="_self">Open dashboard</a></div>
+<a class="go" href="?page=overview" target="_self">Explore the dashboard<span class="ar"><svg viewBox="0 0 24 24" fill="none" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span></a></div>
 <div class="lg ic"><img src="__RAW__Logo%20icareer.webp"></div>
 <div class="lg dg"><img src="__RAW__Logo%20Digitera.png"></div></div>"""
     if LOGO_MODE == "white":
