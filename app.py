@@ -24,9 +24,18 @@ DESC = {
 }
 st.set_page_config(page_title="Pharmacy Performance Dashboard", page_icon="💊", layout="wide",
                    initial_sidebar_state="collapsed")
+
+# ---- Device detection (used to size charts on phones) ----
+try:
+    _ua = (st.context.headers.get("User-Agent") or "").lower()
+except Exception:
+    _ua = ""
+IS_MOBILE = any(k in _ua for k in ("mobile", "android", "iphone", "ipad"))
+
 st.markdown(f"""
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');
+:root,.stApp,[data-testid=stAppViewContainer]{{color-scheme:light!important}}
 html,body,[class*="st-"],.stApp{{font-family:'Poppins','Segoe UI',sans-serif}}
 .stApp{{background:linear-gradient(180deg,#e9f0f9 0%,#f7f9fd 100%)}}
 header[data-testid=stHeader]{{background:transparent;height:0}}
@@ -93,6 +102,32 @@ for _k, _inner in _P.items():
     _css += f".st-key-{_key} button::before{{content:'{_NAMES[_k]}'}}"
 st.markdown("<style>" + _css + "</style>", unsafe_allow_html=True)
 
+# ---- Responsive rules (must come AFTER the header button CSS above so they win) ----
+st.markdown("""
+<style>
+@media (max-width: 640px){
+  .block-container,[data-testid=stMainBlockContainer]{padding:.6rem .7rem 2rem!important}
+  .st-key-hdr{padding:12px 10px;border-radius:18px}
+  .st-key-hdr [data-testid=stHorizontalBlock]{flex-wrap:wrap!important;gap:.45rem!important;justify-content:center}
+  .st-key-hdr [data-testid=stColumn],.st-key-hdr [data-testid=column]{min-width:0!important;flex:0 0 auto!important;width:auto!important}
+  .st-key-hdr [data-testid=stColumn]:nth-child(-n+2),.st-key-hdr [data-testid=column]:nth-child(-n+2){
+      flex:1 1 100%!important;width:100%!important;text-align:center}
+  .st-key-hdr img{margin:0 auto}
+  .st-key-hdr button{width:42px!important;min-width:42px!important;height:42px!important;border-radius:12px!important}
+  .st-key-hdr button::after{width:24px;height:24px}
+  .ttl{font-size:18px}.sub{font-size:12px}
+  .st-key-flt{padding:8px 12px}
+  .kpi{height:auto;min-height:88px;padding:10px 12px 10px 16px;gap:10px}
+  .kpi .ic{flex:0 0 42px;height:42px;font-size:20px}
+  .kpi .v{font-size:19px}
+  .insight{font-size:13px;padding:12px 14px}
+  .sec{font-size:17px}
+}
+@media (min-width: 1600px){
+  .block-container,[data-testid=stMainBlockContainer]{max-width:1600px}
+}
+</style>""", unsafe_allow_html=True)
+
 
 def kpi(col, icon, label, value, sub="", color=TEAL):
     col.markdown(f"<div class='kpi' style='--c:{color}'><div class='ic' style='background:{color}22'>{icon}</div>"
@@ -118,10 +153,16 @@ def show(fig, col=None, h=380):
     for ax in (fig.layout.xaxis, fig.layout.yaxis):
         if ax.title.text in NAMES:
             ax.title.text = NAMES[ax.title.text]
-    fig.update_layout(template="plotly_white", height=h, margin=dict(l=10, r=10, t=55, b=10),
+    if IS_MOBILE:
+        h = min(h, 340)
+    fig.update_layout(template="plotly_white", height=h, margin=dict(l=6, r=6, t=55, b=10),
                       paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)",
-                      font=dict(family="Poppins, Segoe UI, sans-serif", color="#44506f"),
-                      title_font=dict(size=15, color=NAVY), legend_title_text="")
+                      font=dict(family="Poppins, Segoe UI, sans-serif", color="#44506f", size=11 if IS_MOBILE else 13),
+                      title_font=dict(size=13 if IS_MOBILE else 15, color=NAVY), legend_title_text="")
+    fig.update_xaxes(automargin=True)
+    fig.update_yaxes(automargin=True)
+    if IS_MOBILE:
+        fig.update_layout(legend=dict(orientation="h", y=-0.2, x=0.5, xanchor="center"))
     with (col or st).container(border=True):
         st.plotly_chart(fig, use_container_width=True, config=CFG)
 
@@ -149,7 +190,10 @@ def trend(m, title, col=None):
 def rev_bar(df, y, title, col=None):
     f = px.bar(df.sort_values("rev"), x="rev", y=y, orientation="h", color="margin", title=title,
                color_continuous_scale=DIV, range_color=(df["margin"].min(), df["margin"].max()))
-    f.update_coloraxes(colorbar=dict(title="Margin", tickformat=".0%", thickness=12, len=.8))
+    cb = dict(title="Margin", tickformat=".0%", thickness=12, len=.8)
+    if IS_MOBILE:
+        cb.update(orientation="h", y=-0.25, x=0.5, xanchor="center", len=.9, thickness=10)
+    f.update_coloraxes(colorbar=cb)
     f.update_xaxes(title=None, tickprefix="$", tickformat="~s")
     f.update_yaxes(title=None)
     show(f, col)
@@ -229,6 +273,12 @@ box-shadow:0 7px 20px rgba(0,0,0,.3);opacity:0;animation:fi .8s ease-in-out 2.8s
 .lg img{height:clamp(26px,5vh,42px);display:block}
 .ic{top:4%;right:3%}.dg{bottom:4%;left:3%;animation-delay:3s}
 @keyframes fi{to{opacity:1}}
+@media (max-width:640px){
+  .tb{padding:12px 16px;font-size:20px}
+  .lg{padding:6px 10px}
+  .lg img{height:24px}
+  .era{padding:8px 12px}
+}
 </style>
 <div class="cv"><div class="ov"></div>
 <div class="era"><img src="__L_ERA__" loading="eager" decoding="sync"></div>
