@@ -3,6 +3,7 @@ import os
 
 import pandas as pd
 import plotly.express as px
+import plotly.graph_objects as go
 import streamlit as st
 
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
@@ -114,6 +115,31 @@ def show(fig, col=None, h=380):
                       title_font=dict(size=15, color=NAVY), legend_title_text="")
     with (col or st).container(border=True):
         st.plotly_chart(fig, use_container_width=True, config=CFG)
+
+
+DIV = [[0, "#E9715B"], [0.5, "#EEF1F6"], [1, TEAL]]
+
+
+def trend(m, title, col=None):
+    f = go.Figure()
+    for name, key, color, fill in [("Revenue", "total_amount", TEAL, "rgba(27,138,166,.20)"),
+                                   ("Profit", "profit", NAVY, "rgba(31,42,107,.16)")]:
+        f.add_trace(go.Scatter(x=m["sale_date"], y=m[key], name=name, mode="lines",
+                               line=dict(shape="spline", smoothing=1, width=3, color=color),
+                               fill="tozeroy", fillcolor=fill, hovertemplate="%{x}: $%{y:,.0f}<extra>" + name + "</extra>"))
+    f.update_layout(title=title, hovermode="x unified", legend=dict(orientation="h", y=1.12, x=1, xanchor="right"))
+    f.update_xaxes(title=None)
+    f.update_yaxes(title=None, tickprefix="$", tickformat="~s")
+    show(f, col)
+
+
+def rev_bar(df, y, title, col=None):
+    f = px.bar(df.sort_values("rev"), x="rev", y=y, orientation="h", color="margin", title=title,
+               color_continuous_scale=DIV, color_continuous_midpoint=margin)
+    f.update_coloraxes(colorbar=dict(title="Margin", tickformat=".0%", thickness=12, len=.8))
+    f.update_xaxes(title=None, tickprefix="$", tickformat="~s")
+    f.update_yaxes(title=None)
+    show(f, col)
 
 
 def truthy(s):
@@ -271,12 +297,10 @@ if page == "Overview":
     best, worst = st_sum.sort_values("margin").iloc[-1], st_sum.sort_values("margin").iloc[0]
     insight(f"{best['store_name']} has the best margin ({best['margin']:.1%}); {worst['store_name']} has the lowest ({worst['margin']:.1%}).")
     m = sales.groupby(sales["sale_date"].dt.to_period("M").astype(str))[["total_amount", "profit"]].sum().reset_index()
-    show(px.area(m, x="sale_date", y=["total_amount", "profit"], title="Revenue and profit by month", color_discrete_sequence=[TEAL, NAVY]))
+    trend(m, "Revenue and profit by month")
     l, r_ = st.columns(2)
-    show(px.bar(st_sum.sort_values("rev"), x="rev", y="store_name", orientation="h", color="margin",
-                title="Revenue by branch (color = margin)", color_continuous_scale=["#E8F4F8", TEAL, NAVY]), l)
-    show(px.bar(cat_sum.sort_values("rev"), x="rev", y="category_name", orientation="h", color="margin",
-                title="Revenue by category (color = margin)", color_continuous_scale=["#E8F4F8", TEAL, NAVY]), r_)
+    rev_bar(st_sum, "store_name", "Revenue by branch (color = margin)", l)
+    rev_bar(cat_sum, "category_name", "Revenue by category (color = margin)", r_)
 
 elif page == "Stores":
     section("Which branches are really profitable once discounting is counted?")
@@ -354,7 +378,7 @@ elif page == "Branch Explorer":
     kpi(c[3], "💊", "Prescriptions", f"{(rx['store_name'] == pick).sum():,}", "In selected dates", AMBER)
     mm_ = s.groupby(s["sale_date"].dt.to_period("M").astype(str))[["total_amount", "profit"]].sum().reset_index()
     l, r_ = st.columns(2)
-    show(px.line(mm_, x="sale_date", y=["total_amount", "profit"], markers=True, title="Monthly revenue and profit", color_discrete_sequence=[TEAL, NAVY]), l)
+    trend(mm_, "Monthly revenue and profit", l)
     cc = s.groupby("category_name")["total_amount"].sum().reset_index().sort_values("total_amount")
     show(px.bar(cc, x="total_amount", y="category_name", orientation="h", title="Revenue by category", color_discrete_sequence=[TEAL]), r_)
 
