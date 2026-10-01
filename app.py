@@ -321,19 +321,46 @@ elif page == "Stores":
     w = st_sum.sort_values("loss").iloc[-1]
     insight(f"{w['store_name']} has the most loss-making sales ({w['loss']:.1%}) with an average discount of {w['disc']:.1f}%.")
     l, r_ = st.columns(2)
-    f = px.bar(st_sum.sort_values("margin"), x="margin", y="store_name", orientation="h", title="Margin by branch", color_discrete_sequence=[TEAL])
-    f.update_xaxes(**PCT)
-    show(f, l)
-    f = px.scatter(st_sum, x="disc", y="margin", size="rev", color="loss", text="store_name",
-                   title="Discount vs margin (size = revenue)", color_continuous_scale=[GREEN, AMBER, RED])
-    f.update_yaxes(**PCT)
-    f.update_traces(textposition="top center")
-    show(f, r_)
+    f = px.bar(st_sum.sort_values("margin"), x="margin", y="store_name", orientation="h", color="margin", text_auto=".1%",
+               title="Margin by branch", color_continuous_scale=DIV, range_color=(st_sum["margin"].min(), st_sum["margin"].max()))
+    f.update_xaxes(tickformat=".0%", title=None, range=[0, st_sum["margin"].max() * 1.18])
+    f.update_yaxes(title=None)
+    f.update_coloraxes(showscale=False)
+    f.update_traces(textposition="outside", cliponaxis=False)
+    show(f, l, h=520)
+
+    comp = st_sum.sort_values("margin")[["store_name", "margin", "disc"]].copy()
+    comp["disc"] = comp["disc"] / 100
+    comp = comp.melt(id_vars="store_name", value_vars=["margin", "disc"], var_name="Metric", value_name="v")
+    comp["Metric"] = comp["Metric"].map({"margin": "Margin", "disc": "Avg discount"})
+    f = px.bar(comp, x="v", y="store_name", color="Metric", barmode="group", orientation="h", text_auto=".0%",
+               title="Discount vs margin by branch", color_discrete_map={"Margin": TEAL, "Avg discount": AMBER})
+    f.update_xaxes(tickformat=".0%", title=None, range=[0, max(comp["v"].max() * 1.18, 0.1)])
+    f.update_yaxes(title=None)
+    f.update_traces(textposition="outside", cliponaxis=False)
+    f.update_layout(legend=dict(orientation="h", y=1.1, x=1, xanchor="right"), bargap=0.28)
+    show(f, r_, h=520)
+
+    def heat(s, high_is_good):
+        lo, hi = s.min(), s.max()
+        stops = [(143, 217, 179), (251, 228, 154), (242, 155, 139)]  # soft green, soft yellow, soft red
+        out = []
+        for v in s:
+            x = (v - lo) / (hi - lo) if hi > lo else 0.5
+            x = 1 - x if high_is_good else x
+            c1, c2, k = (stops[0], stops[1], x * 2) if x < 0.5 else (stops[1], stops[2], (x - 0.5) * 2)
+            rgb = tuple(int(p + (q - p) * k) for p, q in zip(c1, c2))
+            out.append(f"background-color: rgb{rgb}; color: {NAVY}; font-weight: 600")
+        return out
+
+    tbl = st_sum.sort_values("prof", ascending=False).rename(columns={"store_name": "Branch", "rev": "Revenue", "prof": "Profit",
+                                                                       "disc": "Avg discount %", "loss": "Loss-making sales", "margin": "Margin"})
+    styled = (tbl.style.format({"Revenue": "${:,.0f}", "Profit": "${:,.0f}", "Avg discount %": "{:.1f}", "Loss-making sales": "{:.1%}", "Margin": "{:.1%}"})
+              .apply(lambda s: heat(s, True), subset=["Margin"])
+              .apply(lambda s: heat(s, False), subset=["Avg discount %", "Loss-making sales"]))
+    section("Branch scorecard (sorted by profit)")
     with st.container(border=True):
-        st.dataframe(st_sum.rename(columns={"store_name": "Branch", "rev": "Revenue", "prof": "Profit", "disc": "Avg discount %",
-                                            "loss": "Loss-making sales", "margin": "Margin"}).style.format(
-            {"Revenue": "${:,.0f}", "Profit": "${:,.0f}", "Avg discount %": "{:.1f}", "Loss-making sales": "{:.1%}", "Margin": "{:.1%}"}),
-            use_container_width=True, hide_index=True)
+        st.dataframe(styled, use_container_width=True, hide_index=True)
     section("Discount simulator")
     cut = st.slider("Reduce every discount by (%)", 0, 50, 20, 5)
     sim_rev = (sales["quantity"] * sales["unit_price"] * (1 - sales["discount_pct"] / 100 * (1 - cut / 100))).sum()
