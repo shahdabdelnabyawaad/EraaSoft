@@ -173,6 +173,24 @@ def graded(n, top, lo, hi):
 
 LOGO_MODE = "pill"  # "white" = transparent white logos, "pill" = logos on white rounded boxes
 RAW = "https://raw.githubusercontent.com/shahdabdelnabyawaad/EraaSoft/main/"
+@st.cache_resource
+def logo_uri(name):
+    """Return the logo as a base64 data URI (local file first, then GitHub), so it is ready the moment the splash starts."""
+    data = None
+    if os.path.exists(name):
+        data = open(name, "rb").read()
+    else:
+        try:
+            import urllib.request
+            data = urllib.request.urlopen(RAW + quote(name), timeout=6).read()
+        except Exception:
+            data = None
+    if data is None:
+        return RAW + quote(name)  # fallback: plain URL
+    mime = "image/webp" if name.endswith(".webp") else "image/png"
+    return f"data:{mime};base64,{base64.b64encode(data).decode()}"
+
+
 if st.query_params.get("page") != "overview":
     html = """
 <style>
@@ -213,16 +231,19 @@ box-shadow:0 7px 20px rgba(0,0,0,.3);opacity:0;animation:fi .8s ease-in-out 2.8s
 @keyframes fi{to{opacity:1}}
 </style>
 <div class="cv"><div class="ov"></div>
-<div class="era"><img src="__RAW__Logo%20EraaSoft.webp"></div>
+<div class="era"><img src="__L_ERA__" loading="eager" decoding="sync"></div>
 <div class="mid">
 <div class="tb">Pharmacy Performance Dashboard</div>
 <a class="go" href="?page=overview" target="_self">Explore the dashboard<span class="ar"><svg viewBox="0 0 24 24" fill="none" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span></a></div>
-<div class="lg ic"><img src="__RAW__Logo%20icareer.webp"></div>
-<div class="lg dg"><img src="__RAW__Logo%20Digitera.png"></div></div>"""
+<div class="lg ic"><img src="__L_IC__" loading="eager" decoding="sync"></div>
+<div class="lg dg"><img src="__L_DG__" loading="eager" decoding="sync"></div></div>"""
     if LOGO_MODE == "white":
         html = html.replace("</style>", ".era,.lg{background:none!important;box-shadow:none!important;padding:0!important}"
                             ".era img,.lg img{filter:brightness(0) invert(1) drop-shadow(0 0 12px rgba(59,193,214,.7))}</style>", 1)
-    st.markdown(html.replace("__RAW__", RAW), unsafe_allow_html=True)
+    html = (html.replace("__L_ERA__", logo_uri("Logo EraaSoft.webp"))
+                .replace("__L_IC__", logo_uri("Logo icareer.webp"))
+                .replace("__L_DG__", logo_uri("Logo Digitera.png")))
+    st.markdown(html, unsafe_allow_html=True)
     st.stop()
 
 @st.cache_data
