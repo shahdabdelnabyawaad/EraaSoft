@@ -662,8 +662,12 @@ elif page == "Stores":
         st.dataframe(styled, use_container_width=True, hide_index=True)
 
     section("Discount simulator")
-    # Turns only this slider red (hue-rotate shifts the teal accent to red)
-    st.markdown("<style>.st-key-sim [data-baseweb=slider]{filter:hue-rotate(165deg) saturate(1.5)}</style>", unsafe_allow_html=True)
+    # Red slider: the handle and value are set directly, the filled part of the track is hue-shifted from teal to red
+    st.markdown("<style>"
+                ".st-key-sim [role=slider]{background-color:#E5484D!important;border-color:#E5484D!important;box-shadow:0 0 0 4px rgba(229,72,77,.18)!important}"
+                ".st-key-sim [data-testid=stSliderThumbValue]{color:#E5484D!important;font-weight:700}"
+                ".st-key-sim [data-baseweb=slider] div[style*='linear-gradient']{filter:hue-rotate(165deg) saturate(1.5)}"
+                "</style>", unsafe_allow_html=True)
     with st.container(key="sim"):
         cut = st.slider("Cut every discount by (%)", 0, 50, 20, 5)
     disc_amt = (sales["quantity"] * sales["unit_price"] * sales["discount_pct"] / 100).sum()
@@ -681,17 +685,6 @@ elif page == "Stores":
     kpi(c[2], "⚖️", "Profit gain", f"+${sim_prof - prof:,.0f}", f"+{(sim_prof - prof) / prof:.1%} vs current profit", GREEN)
     insight(f"Customers received ${disc_amt:,.0f} in discounts. Every 1% you trim returns about ${disc_amt / 100:,.0f} "
             f"to profit, so the further right the slider, the higher the profit (assuming the same quantities are sold).")
-    xs = list(range(0, 55, 5))
-    f = go.Figure()
-    f.add_trace(go.Scatter(x=xs, y=[sim_profit(x) for x in xs], mode="lines+markers", line=dict(color=GREEN, width=3, shape="spline"),
-                           marker=dict(size=7), hovertemplate="Cut %{x}%: $%{y:,.0f}<extra></extra>"))
-    f.add_trace(go.Scatter(x=[cut], y=[sim_prof], mode="markers", hoverinfo="skip",
-                           marker=dict(size=16, color=RED, line=dict(color="#fff", width=2))))
-    f.add_hline(y=prof, line_dash="dot", line_color=NAVY, annotation_text="Current profit", annotation_position="bottom right")
-    f.update_layout(title="Profit as discounts are cut", showlegend=False)
-    f.update_xaxes(title="Discount cut (%)", ticksuffix="%")
-    f.update_yaxes(title=None, tickprefix="$", tickformat="~s")
-    show(f, h=340)
 
 elif page == "Categories":
     section("Which categories drive revenue and margin, and which just drive discounting?")
@@ -707,17 +700,17 @@ elif page == "Categories":
     hm["margin"] = hm["profit"] / hm["total_amount"]
     pv = hm.pivot(index="category_name", columns="store_name", values="margin")
     pv = pv.loc[pv.mean(axis=1).sort_values().index, pv.mean(axis=0).sort_values(ascending=False).index]
-    insight(f"Weakest category: {cat_sum.sort_values('margin').iloc[0]['category_name']}. "
-            f"Weakest branches: {', '.join(st_sum.sort_values('margin').head(3)['store_name'])}.")
     f = px.imshow(pv, text_auto=".0%", aspect="auto", color_continuous_scale=DIV, zmin=pv.min().min(), zmax=pv.max().max(),
                   title="Where is margin lost? Category x branch")
     f.update_coloraxes(colorbar=dict(title="Margin", tickformat=".0%", thickness=12))
-    f.update_xaxes(title=None, side="top", tickangle=-30)
+    f.update_xaxes(title=None, side="bottom", tickangle=-30)
     f.update_yaxes(title=None)
     f.update_traces(textfont=dict(size=10))
     show(f, h=470)
+    insight(f"Weakest category: {cat_sum.sort_values('margin').iloc[0]['category_name']}. "
+            f"Weakest branches: {', '.join(st_sum.sort_values('margin').head(3)['store_name'])}.")
     st.caption("How to read it: a weak column means a branch problem (usually its discounts). A weak row means a category problem "
-               "(usually pricing or cost). Weakest category is at the top, weakest branches on the right.")
+               "(usually pricing or cost). The weakest category is at the top and the weakest branches are on the right.")
     top = sales.groupby("product_name")["profit"].sum().nlargest(10).reset_index()
     top = top.sort_values("profit")
     n = len(top)
